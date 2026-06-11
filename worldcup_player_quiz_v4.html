@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026美加墨世界杯 — 你最像哪位球员？</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --card: rgba(20, 20, 35, 0.88);
+    --border: rgba(255,255,255,0.08);
+    --text: #f0f0f5;
+    --text2: #a0a0b0;
+    --accent: #ff4d6d;
+    --accent2: #00d4aa;
+    --accent3: #3b82f6;
+    --gold: #ffd700;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+  .bg-deco {
+    position: fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(255,77,109,0.12) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(0,212,170,0.10) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(59,130,246,0.08) 0%, transparent 50%);
+  }
+  .bg-deco::before {
+    content:""; position:absolute; inset:0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L55 30 L30 55 L5 30 Z' fill='none' stroke='rgba(255,255,255,0.03)' stroke-width='1'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
+  .container { position:relative; z-index:1; max-width:820px; margin:0 auto; padding: 20px; min-height:100vh; display:flex; flex-direction:column; justify-content:center; }
+  .hidden { display:none !important; }
+
+  .cover { text-align:center; animation: fadeIn 0.8s ease; }
+  .cover h1 {
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #ff4d6d, #ffd700, #00d4aa, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .cover .subtitle { color: var(--text2); font-size: 1.05rem; margin-bottom: 28px; }
+  .cover .badge-row { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom: 32px; }
+  .badge {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    color: var(--text2);
+    backdrop-filter: blur(10px);
+  }
+  .btn-primary {
+    display:inline-flex; align-items:center; gap:8px;
+    background: linear-gradient(135deg, #ff4d6d, #3b82f6);
+    color: white; border:none; padding: 14px 36px;
+    border-radius: 12px; font-size: 1.1rem; font-weight: 700;
+    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 8px 32px rgba(255,77,109,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,77,109,0.4); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .player-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .avatar-fwd { background: linear-gradient(135deg, #ff4757, #ff6b81); }
+  .avatar-mid { background: linear-gradient(135deg, #1e90ff, #00bfff); }
+  .avatar-def { background: linear-gradient(135deg, #2ed573, #26de81); }
+
+  .player-avatar-lg {
+    width: 120px; height: 120px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.5rem; margin: 0 auto 16px;
+    border: 3px solid rgba(255,255,255,0.2);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    overflow: hidden;
+    position: relative;
+  }
+  .player-avatar-lg img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .player-avatar-lg .fallback {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.5rem;
+  }
+
+  .quiz-page { animation: slideUp 0.5s ease; }
+  .progress-wrap { margin-bottom: 24px; }
+  .progress-label { display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text2); margin-bottom:6px; }
+  .progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow:hidden; }
+  .progress-fill { height:100%; background: linear-gradient(90deg, #ff4d6d, #3b82f6); border-radius:3px; transition: width 0.4s ease; }
+
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    backdrop-filter: blur(16px);
+    margin-bottom: 20px;
+  }
+  .question-num { font-size: 0.8rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .question-text { font-size: clamp(1.1rem, 3vw, 1.4rem); font-weight: 700; margin-bottom: 24px; line-height: 1.5; }
+
+  .options { display:flex; flex-direction:column; gap: 12px; }
+  .option {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display:flex; align-items:center; gap: 12px;
+    font-size: 1rem;
+  }
+  .option:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); transform: translateX(4px); }
+  .option:active { transform: scale(0.99); }
+  .option.selected { background: rgba(59,130,246,0.15); border-color: var(--accent3); }
+  .option-letter {
+    width: 32px; height: 32px; border-radius: 8px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight: 800; font-size: 0.9rem; flex-shrink:0;
+    background: rgba(255,255,255,0.08); color: var(--text2);
+  }
+  .option:hover .option-letter { background: var(--accent); color: white; }
+  .option.selected .option-letter { background: var(--accent3); color: white; }
+
+  .quiz-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 16px; gap: 12px;
+  }
+  .btn-back {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+  .btn-back:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .live-top3 {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(16px);
+    margin-top: 8px;
+    animation: fadeIn 0.4s ease;
+  }
+  .live-top3-header { display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--gold); font-weight:700; margin-bottom:14px; }
+  .live-top3-header .pulse { width:8px; height:8px; border-radius:50%; background:var(--gold); animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .top3-list { display:flex; flex-direction:column; gap:10px; }
+  .top3-item {
+    display:flex; align-items:center; gap:12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 10px 14px;
+  }
+  .top3-rank { width:28px; text-align:center; font-weight:800; font-size:0.9rem; }
+  .top3-rank-1 { color: #ffd700; }
+  .top3-rank-2 { color: #c0c0c0; }
+  .top3-rank-3 { color: #cd7f32; }
+  .top3-info { flex:1; min-width:0; }
+  .top3-name { font-weight:700; font-size:0.95rem; }
+  .top3-meta { font-size:0.8rem; color:var(--text2); }
+  .top3-tags { display:flex; gap:4px; flex-wrap:wrap; margin-top:2px; }
+  .top3-tag { font-size:0.7rem; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; color:var(--text2); }
+  .top3-sim { font-weight:800; font-size:0.95rem; white-space:nowrap; }
+  .top3-sim-high { color: var(--accent2); }
+  .mini-radar { width: 56px; height: 56px; flex-shrink: 0; }
+
+  .result-page { animation: fadeIn 0.6s ease; text-align:center; }
+  .result-badge {
+    display:inline-block;
+    background: linear-gradient(135deg, rgba(255,77,109,0.2), rgba(59,130,246,0.2));
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 999px;
+    padding: 6px 18px;
+    font-size: 0.85rem;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  .result-hero {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px 24px;
+    backdrop-filter: blur(16px);
+    margin-bottom: 24px;
+  }
+  .result-hero .player-avatar-lg {
+    width: 140px; height: 140px;
+    margin: 0 auto 20px;
+  }
+  .result-dims {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .result-dim {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+  .result-dim .dim-name { color: var(--text2); }
+  .result-dim .dim-val { color: var(--accent); font-weight: 700; }
+
+  .result-player-name {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 900;
+    margin-bottom: 4px;
+    background: linear-gradient(135deg, #fff, #ffd700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .result-player-meta { color: var(--text2); font-size: 1.1rem; margin-bottom: 24px; }
+  .match-percent {
+    font-size: 4rem; font-weight: 900;
+    background: linear-gradient(135deg, #ff4d6d, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .match-label { color: var(--text2); font-size: 0.95rem; margin-bottom: 28px; }
+
+  .radar-container {
+    max-width: 480px; margin: 0 auto 28px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: blur(16px);
+  }
+  .radar-title { font-size: 0.9rem; color: var(--text2); margin-bottom: 12px; font-weight: 600; }
+  .radar-legend {
+    display: flex; justify-content: center; gap: 24px;
+    margin-top: 12px; font-size: 0.85rem; color: var(--text2);
+  }
+  .radar-legend span { display: flex; align-items: center; gap: 6px; }
+  .radar-legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-you { background: #3b82f6; }
+  .dot-player { background: #ff4d6d; }
+
+  .style-report {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: blur(16px);
+    text-align: left;
+    margin-bottom: 24px;
+  }
+  .style-report h3 { font-size: 1.1rem; margin-bottom: 10px; color: var(--accent); }
+  .style-report p { color: var(--text2); font-size: 0.95rem; line-height: 1.7; }
+  .style-report .highlight { color: var(--text); font-weight: 600; }
+
+  .result-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom: 20px; }
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.3); }
+
+  .share-text {
+    background: rgba(0,0,0,0.4);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 0.85rem;
+    color: var(--text2);
+    word-break: break-all;
+    text-align: left;
+    margin-bottom: 20px;
+    display:none;
+  }
+  .share-text.show { display:block; animation: fadeIn 0.3s ease; }
+
+  .all-players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .player-chip {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+  .player-chip:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.2); }
+  .player-chip .pavatar { width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+  .player-chip .pname { font-weight: 700; font-size: 0.82rem; }
+  .player-chip .ppos { color: var(--text2); font-size: 0.72rem; margin-top: 2px; }
+  .player-chip .ptags { display:flex; gap:2px; justify-content:center; flex-wrap:wrap; margin-top:4px; }
+  .player-chip .ptag { font-size:0.65rem; background:rgba(255,255,255,0.06); padding:1px 4px; border-radius:3px; color:var(--text2); }
+
+  .music-player {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    backdrop-filter: blur(16px);
+    width: 320px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    transition: transform 0.3s ease;
+  }
+  .music-player.collapsed { transform: translateY(calc(100% - 48px)); }
+  .music-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .music-title { font-size: 0.85rem; font-weight: 700; display:flex; align-items:center; gap:6px; }
+  .music-toggle { background:none; border:none; color:var(--text2); cursor:pointer; font-size:1.1rem; }
+  .music-body { display:flex; flex-direction:column; gap:8px; }
+  .music-iframe-wrap {
+    width:100%; height:170px; border-radius:10px; overflow:hidden;
+    background: rgba(0,0,0,0.3);
+    display:none;
+  }
+  .music-iframe-wrap.active { display:block; }
+  .music-iframe-wrap iframe { width:100%; height:100%; border:none; }
+  .music-tracks { display:flex; flex-wrap:wrap; gap:6px; }
+  .track-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .track-btn:hover, .track-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .music-source { display:flex; gap:6px; margin-bottom:4px; }
+  .source-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    color: var(--text2);
+    cursor: pointer;
+  }
+  .source-btn.active { background: var(--accent3); color: white; border-color: var(--accent3); }
+  .music-note { font-size: 0.7rem; color: var(--text2); margin-top: 4px; }
+
+  @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+  @keyframes slideUp { from { opacity:0; transform: translateY(30px); } to { opacity:1; transform: translateY(0); } }
+
+  @media (max-width: 600px) {
+    .container { padding: 16px; }
+    .question-card { padding: 20px; }
+    .option { padding: 14px 16px; font-size: 0.95rem; }
+    .top3-item { padding: 8px 10px; }
+    .mini-radar { width: 48px; height: 48px; }
+    .music-player { width: calc(100% - 32px); left: 16px; right: 16px; bottom: 12px; }
+    .all-players-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+    .result-hero { padding: 24px 16px; }
+    .player-avatar-lg { width: 100px; height: 100px; font-size: 2.8rem; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-deco"></div>
+<div class="container">
+
+<div id="cover" class="cover">
+  <h1>⚽ 2026 美加墨世界杯</h1>
+  <div class="subtitle">测一测，你最像哪位世界杯球星？</div>
+  <div class="badge-row">
+    <span class="badge">🇺🇸 美国</span>
+    <span class="badge">🇨🇦 加拿大</span>
+    <span class="badge">🇲🇽 墨西哥</span>
+    <span class="badge">60 位球星</span>
+    <span class="badge">20 道问题</span>
+  </div>
+  <button class="btn-primary" onclick="app.start()">开始测试 🚀</button>
+  <div style="margin-top:32px; color:var(--text2); font-size:0.75rem;">
+    <div style="margin-bottom:10px; font-weight:700; color:var(--text);">本测试包含 60 位球员</div>
+    <div class="all-players-grid" id="coverPlayers"></div>
+  </div>
+</div>
+
+<div id="quiz" class="quiz-page hidden">
+  <div class="progress-wrap">
+    <div class="progress-label"><span id="progressText">问题 1 / 20</span><span id="progressPct">5%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:5%"></div></div>
+  </div>
+
+  <div class="question-card">
+    <div class="question-num" id="qNum">QUESTION 01</div>
+    <div class="question-text" id="qText">加载中...</div>
+    <div class="options" id="options"></div>
+    <div class="quiz-nav">
+      <button class="btn-back" id="btnBack" onclick="app.goBack()" disabled>← 上一题</button>
+      <span style="color:var(--text2); font-size:0.8rem;">点击选项自动进入下一题</span>
+    </div>
+  </div>
+
+  <div class="live-top3" id="liveTop3" style="display:none;">
+    <div class="live-top3-header"><span class="pulse"></span> 根据当前回答，你最接近的 3 位球员</div>
+    <div class="top3-list" id="top3List"></div>
+  </div>
+</div>
+
+<div id="result" class="result-page hidden">
+  <div class="result-badge">🏆 测试完成</div>
+
+  <div class="result-hero">
+    <div class="player-avatar-lg" id="rAvatar">
+      <div class="fallback" id="rFallback"></div>
+    </div>
+    <div class="result-dims" id="rDims"></div>
+    <div class="result-player-name" id="rName">球员名</div>
+    <div class="result-player-meta" id="rMeta">国家 · 位置</div>
+    <div class="match-percent" id="rPercent">0%</div>
+    <div class="match-label">风格匹配度</div>
+  </div>
+
+  <div class="radar-container">
+    <div class="radar-title">能力风格对比</div>
+    <svg id="radarSvg" viewBox="0 0 400 300" style="width:100%; height:auto;"></svg>
+    <div class="radar-legend">
+      <span><span class="dot dot-you"></span> 你</span>
+      <span id="legendPlayer"><span class="dot dot-player"></span> 球员</span>
+    </div>
+  </div>
+
+  <div class="style-report">
+    <h3>🎯 你的球员风格报告</h3>
+    <p id="rReport">报告内容...</p>
+  </div>
+
+  <div class="result-actions">
+    <button class="btn-secondary" onclick="app.copyResult()">📋 复制结果</button>
+    <button class="btn-secondary" onclick="app.restart()">🔄 重新测试</button>
+  </div>
+  <div class="share-text" id="shareText"></div>
+
+  <div style="color:var(--text2); font-size:0.8rem; margin-top:8px;">
+    💡 提示：截图结果页即可分享到朋友圈/小红书/微博
+  </div>
+</div>
+
+</div>
+
+<div class="music-player collapsed" id="musicPlayer">
+  <div class="music-header" onclick="app.toggleMusic()">
+    <div class="music-title">🎵 世界杯主题曲</div>
+    <button class="music-toggle" id="musicToggle">▲</button>
+  </div>
+  <div class="music-body">
+    <div class="music-source">
+      <button class="source-btn active" id="srcBili" onclick="app.setSource('bilibili')">B站(国内)</button>
+      <button class="source-btn" id="srcYT" onclick="app.setSource('youtube')">YouTube</button>
+    </div>
+    <div class="music-tracks">
+      <button class="track-btn active" onclick="app.playTrack(0)">《Dai Dai》</button>
+      <button class="track-btn" onclick="app.playTrack(1)">《Waka Waka》</button>
+      <button class="track-btn" onclick="app.playTrack(2)">《Hayya Hayya》</button>
+    </div>
+    <div class="music-iframe-wrap active" id="musicWrap">
+      <iframe id="musicIframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <div class="music-note">点击上方歌名切换 · 国内用户请选B站 · 海外用户可选YouTube</div>
+  </div>
+</div>
+
+<script>
+const app = {
+  current: 0,
+  scores: { tech:50, speed:50, power:50, lead:50, crea:50, dribble:50, shooting:50, defense:50, vision:50, stamina:50, aerial:50, mentality:50 },
+  history: [],
+  musicCollapsed: true,
+  currentTrack: 0,
+  musicSource: 'bilibili',
+  musicStarted: false,
+
+  players: [{"name": "梅西", "country": "阿根廷", "pos": "前锋", "flag": "🇦🇷", "wikiName": "Lionel_Messi", "tags": ["魔术师", "天才", "盘带大师", "传球艺术家", "球队灵魂"], "tech": 95, "speed": 70, "power": 60, "lead": 85, "crea": 98, "dribble": 95, "shooting": 85, "defense": 40, "vision": 95, "stamina": 75, "aerial": 55, "mentality": 95, "desc": "你是足球史上的魔术师，拥有超凡的脚下技术和创造力。在球场上，你总能用意想不到的方式撕开防线，是球队当之无愧的灵魂人物。你的盘带如同舞蹈，传球如同手术刀般精准。"}, {"name": "C罗", "country": "葡萄牙", "pos": "前锋", "flag": "🇵🇹", "wikiName": "Cristiano_Ronaldo", "tags": ["终结者", "领袖", "自律典范", "空中霸主", "关键先生"], "tech": 88, "speed": 75, "power": 92, "lead": 90, "crea": 80, "dribble": 82, "shooting": 95, "defense": 45, "vision": 78, "stamina": 90, "aerial": 95, "mentality": 98, "desc": "你是天生的赢家，拥有无与伦比的进球欲望和领袖气质。无论面对怎样的困境，你总能用意志力带领球队走向胜利。你的弹跳和头球是传奇，你的自律更是所有球员的标杆。"}, {"name": "姆巴佩", "country": "法国", "pos": "前锋", "flag": "🇫🇷", "wikiName": "Kylian_Mbappé", "tags": ["猎豹", "爆点", "速度之王", "终结者", "未来巨星"], "tech": 85, "speed": 98, "power": 80, "lead": 75, "crea": 85, "dribble": 90, "shooting": 88, "defense": 35, "vision": 80, "stamina": 90, "aerial": 65, "mentality": 85, "desc": "你是风驰电掣的猎豹，拥有惊人的爆发力和终结能力。你的速度让对手望尘莫及，是反击中最致命的武器。你代表着足球的未来，是新时代超级巨星的典范。"}, {"name": "哈兰德", "country": "挪威", "pos": "前锋", "flag": "🇳🇴", "wikiName": "Erling_Haaland", "tags": ["坦克", "进球机器", "身体怪兽", "门前嗅觉", "效率之王"], "tech": 78, "speed": 90, "power": 98, "lead": 70, "crea": 75, "dribble": 70, "shooting": 98, "defense": 40, "vision": 65, "stamina": 95, "aerial": 95, "mentality": 88, "desc": "你是进球机器，拥有恐怖的身体素质和门前嗅觉。你像坦克一样碾压防线，用最简单直接的方式摧毁对手。你的进球效率令人咋舌，是现代中锋的终极形态。"}, {"name": "维尼修斯", "country": "巴西", "pos": "前锋", "flag": "🇧🇷", "wikiName": "Vinícius_Júnior", "tags": ["盘带王", "爆点", "桑巴舞者", "1v1专家", "边路杀手"], "tech": 82, "speed": 95, "power": 70, "lead": 65, "crea": 88, "dribble": 95, "shooting": 78, "defense": 30, "vision": 82, "stamina": 85, "aerial": 50, "mentality": 80, "desc": "你是边路的舞者，拥有出色的盘带和突破能力。你总能在1对1中占据上风，用个人能力改变比赛走势。你的巴西血统赋予了你与生俱来的足球天赋。"}, {"name": "凯恩", "country": "英格兰", "pos": "前锋", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "wikiName": "Harry_Kane", "tags": ["支点", "全能", "传球大师", "回撤组织", "点球专家"], "tech": 85, "speed": 65, "power": 85, "lead": 80, "crea": 78, "dribble": 70, "shooting": 92, "defense": 45, "vision": 88, "stamina": 80, "aerial": 90, "mentality": 90, "desc": "你是全能中锋，拥有顶级的射术和传球视野。你不仅能自己终结，更能为队友创造机会，是完美的进攻支点。你的回撤组织能力让对手防不胜防。"}, {"name": "劳塔罗", "country": "阿根廷", "pos": "前锋", "flag": "🇦🇷", "wikiName": "Lautaro_Martínez", "tags": ["斗士", "跑位", "压迫前锋", "团队球员", "精神领袖"], "tech": 80, "speed": 82, "power": 78, "lead": 75, "crea": 80, "dribble": 78, "shooting": 85, "defense": 55, "vision": 75, "stamina": 90, "aerial": 85, "mentality": 88, "desc": "你是斗士型前锋，拥有顽强的拼搏精神和全面的技术。你总是在球场上全力以赴，用跑动和斗志感染全队。你的压迫和反抢是球队第一道防线。"}, {"name": "亚马尔", "country": "西班牙", "pos": "前锋", "flag": "🇪🇸", "wikiName": "Lamine_Yamal", "tags": ["新星", "天才", "左脚魔术师", "突破能手", "未来金球"], "tech": 88, "speed": 85, "power": 60, "lead": 60, "crea": 92, "dribble": 90, "shooting": 80, "defense": 35, "vision": 85, "stamina": 80, "aerial": 45, "mentality": 75, "desc": "你是天才少年，拥有超越年龄的成熟和技术。你代表着足球的未来，用创造力重新定义边锋的角色。你的左脚技术让人想起年轻的梅西。"}, {"name": "莱万", "country": "波兰", "pos": "前锋", "flag": "🇵🇱", "wikiName": "Robert_Lewandowski", "tags": ["射手", "冷静", "跑位大师", "支点", "纪录粉碎机"], "tech": 88, "speed": 70, "power": 85, "lead": 75, "crea": 80, "dribble": 75, "shooting": 95, "defense": 40, "vision": 80, "stamina": 85, "aerial": 92, "mentality": 90, "desc": "你是冷静的终结者，拥有完美的跑位和射门技术。你总能在最关键的时刻出现在最关键的位置，将球送入网窝。你的九分钟五球是永恒的传奇。"}, {"name": "萨拉赫", "country": "埃及", "pos": "前锋", "flag": "🇪🇬", "wikiName": "Mohamed_Salah", "tags": ["法老", "内切", "左脚重炮", "铁人", "非洲之王"], "tech": 85, "speed": 92, "power": 70, "lead": 70, "crea": 85, "dribble": 88, "shooting": 88, "defense": 40, "vision": 82, "stamina": 88, "aerial": 55, "mentality": 85, "desc": "你是法老，拥有出色的内切射门和速度。你在边路如鱼得水，是球队最稳定的得分保障。你的职业态度和谦逊让你成为球迷的偶像。"}, {"name": "孙兴慜", "country": "韩国", "pos": "前锋", "flag": "🇰🇷", "wikiName": "Son_Heung-min", "tags": ["亚洲一哥", "全能", "双足均衡", "远射高手", "精神领袖"], "tech": 82, "speed": 90, "power": 72, "lead": 75, "crea": 80, "dribble": 85, "shooting": 85, "defense": 45, "vision": 78, "stamina": 88, "aerial": 65, "mentality": 82, "desc": "你是亚洲之光，拥有全面的技术和惊人的速度。你是球队的多面手，能胜任多个进攻位置。你的普斯卡什奖进球是永恒的经典。"}, {"name": "奥斯梅恩", "country": "尼日利亚", "pos": "前锋", "flag": "🇳🇬", "wikiName": "Victor_Osimhen", "tags": ["野兽", "空霸", "爆发力", "抢点专家", "意甲金靴"], "tech": 75, "speed": 85, "power": 90, "lead": 65, "crea": 70, "dribble": 72, "shooting": 88, "defense": 50, "vision": 65, "stamina": 90, "aerial": 92, "mentality": 85, "desc": "你是野兽型前锋，拥有强悍的身体和空中优势。你在禁区内如同霸主，让对手后卫闻风丧胆。你的爆发力和弹跳是天赋的馈赠。"}, {"name": "穆西亚拉", "country": "德国", "pos": "前锋", "flag": "🇩🇪", "wikiName": "Jamal_Musiala", "tags": ["小鹿", "灵动", "盘带精灵", "多面手", "德国未来"], "tech": 90, "speed": 82, "power": 65, "lead": 65, "crea": 88, "dribble": 92, "shooting": 78, "defense": 40, "vision": 85, "stamina": 82, "aerial": 50, "mentality": 78, "desc": "你是灵动的小鹿，拥有出色的盘带和变向能力。你在狭小空间内游刃有余，是防守球员的噩梦。你的多国籍背景让你选择了德国战车。"}, {"name": "萨卡", "country": "英格兰", "pos": "前锋", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "wikiName": "Bukayo_Saka", "tags": ["稳定", "边路", "左脚", "大心脏", "青训典范"], "tech": 85, "speed": 82, "power": 75, "lead": 70, "crea": 82, "dribble": 85, "shooting": 82, "defense": 55, "vision": 80, "stamina": 88, "aerial": 60, "mentality": 85, "desc": "你是稳定的边路核心，拥有均衡的技术和成熟的心态。你是球队最可靠的进攻发起点之一。你的点球失误后的坚强让你赢得了全世界的尊重。"}, {"name": "福登", "country": "英格兰", "pos": "前锋", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "wikiName": "Phil_Foden", "tags": ["太子", "左脚", "多面手", "战术理解", "曼城核心"], "tech": 88, "speed": 78, "power": 68, "lead": 65, "crea": 85, "dribble": 86, "shooting": 80, "defense": 45, "vision": 85, "stamina": 85, "aerial": 55, "mentality": 80, "desc": "你是曼城太子，拥有精湛的左脚技术和战术意识。你在前场无处不在，用智慧和技术主导进攻。你的多位置适应性是教练的宝贵财富。"}, {"name": "马丁内利", "country": "巴西", "pos": "前锋", "flag": "🇧🇷", "wikiName": "Gabriel_Martinelli", "tags": ["快马", "勤奋", "回追", "巴西新星", "左路快刀"], "tech": 80, "speed": 88, "power": 72, "lead": 60, "crea": 78, "dribble": 85, "shooting": 78, "defense": 50, "vision": 75, "stamina": 88, "aerial": 60, "mentality": 75, "desc": "你是勤奋的边锋，拥有出色的速度和回追能力。你在攻防两端都全力以赴，是教练最喜欢的类型。你的拼搏精神弥补了技术的不足。"}, {"name": "阿尔瓦雷斯", "country": "阿根廷", "pos": "前锋", "flag": "🇦🇷", "wikiName": "Julián_Álvarez", "tags": ["猎手", "勤奋", "跑动", "双冠王", "曼城福星"], "tech": 82, "speed": 80, "power": 70, "lead": 68, "crea": 78, "dribble": 75, "shooting": 82, "defense": 55, "vision": 72, "stamina": 92, "aerial": 70, "mentality": 85, "desc": "你是勤奋的猎手，拥有出色的跑动和抢点能力。你像永动机一样在球场上奔跑，用不懈的努力换取进球。你的世界杯和欧冠双冠是实力的证明。"}, {"name": "罗德里戈", "country": "巴西", "pos": "前锋", "flag": "🇧🇷", "wikiName": "Rodrygo", "tags": ["新星", "大场面", "右脚", "皇马未来", "欧冠英雄"], "tech": 86, "speed": 85, "power": 68, "lead": 65, "crea": 82, "dribble": 85, "shooting": 80, "defense": 40, "vision": 80, "stamina": 85, "aerial": 55, "mentality": 88, "desc": "你是巴西新星，拥有出色的技术和冷静的心态。你在关键时刻从不手软，是大场面球员。你的欧冠淘汰赛进球是皇马夺冠的关键。"}, {"name": "努涅斯", "country": "乌拉圭", "pos": "前锋", "flag": "🇺🇾", "wikiName": "Darwin_Núñez", "tags": ["神锋", "不懈", "压迫", "身体", "利物浦希望"], "tech": 78, "speed": 88, "power": 88, "lead": 70, "crea": 72, "dribble": 75, "shooting": 82, "defense": 50, "vision": 68, "stamina": 90, "aerial": 85, "mentality": 82, "desc": "你是乌拉圭神锋，拥有强悍的身体和不懈的奔跑。你总是在寻找机会，即使错失良机也从不放弃。你的拼搏精神是乌拉圭足球的传承。"}, {"name": "登贝莱", "country": "法国", "pos": "前锋", "flag": "🇫🇷", "wikiName": "Ousmane_Dembélé", "tags": ["爆点", "双足", "爆发力", "天赋异禀", "巴萨快马"], "tech": 88, "speed": 92, "power": 70, "lead": 60, "crea": 85, "dribble": 90, "shooting": 78, "defense": 35, "vision": 82, "stamina": 82, "aerial": 50, "mentality": 75, "desc": "你是边路爆点，拥有出色的双足技术和爆发力。你时而让人惊叹，时而让人叹息，但天赋毋庸置疑。你的左右脚均衡让防守者无所适从。"}, {"name": "贝林厄姆", "country": "英格兰", "pos": "中场", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "wikiName": "Jude_Bellingham", "tags": ["全能", "领袖", "B2B", "皇马新核", "未来金球"], "tech": 85, "speed": 80, "power": 85, "lead": 88, "crea": 82, "dribble": 80, "shooting": 82, "defense": 70, "vision": 85, "stamina": 92, "aerial": 80, "mentality": 90, "desc": "你是全能战士，拥有出色的攻防能力和领袖气质。你在球场上无处不在，既能组织进攻，也能回防拦截。你的成熟超越了你的年龄。"}, {"name": "德布劳内", "country": "比利时", "pos": "中场", "flag": "🇧🇪", "wikiName": "Kevin_De_Bruyne", "tags": ["传球大师", "发动机", "上帝视角", "助攻王", "英超传奇"], "tech": 92, "speed": 75, "power": 70, "lead": 85, "crea": 95, "dribble": 80, "shooting": 85, "defense": 55, "vision": 98, "stamina": 82, "aerial": 65, "mentality": 90, "desc": "你是传球大师，拥有上帝视角般的视野和精准的脚法。你的助攻如同艺术品，总能找到对手防线的缝隙。你是现代足球最完美的中场发动机。"}, {"name": "莫德里奇", "country": "克罗地亚", "pos": "中场", "flag": "🇭🇷", "wikiName": "Luka_Modrić", "tags": ["艺术家", "指挥官", "外脚背", "金球先生", "皇马传奇"], "tech": 95, "speed": 65, "power": 60, "lead": 90, "crea": 92, "dribble": 88, "shooting": 75, "defense": 60, "vision": 95, "stamina": 85, "aerial": 55, "mentality": 95, "desc": "你是中场艺术家，拥有超凡的控球和传球技术。你的外脚背传球是足球史上的经典。你的金球奖是对你优雅球风的最高认可。"}, {"name": "罗德里", "country": "西班牙", "pos": "中场", "flag": "🇪🇸", "wikiName": "Rodri_(footballer)", "tags": ["节拍器", "大脑", "位置感", "防守型金球", "曼城枢纽"], "tech": 88, "speed": 65, "power": 80, "lead": 85, "crea": 85, "dribble": 70, "shooting": 70, "defense": 90, "vision": 88, "stamina": 90, "aerial": 85, "mentality": 88, "desc": "你是球队的节拍器，拥有出色的位置感和传球能力。你掌控着比赛的节奏，是攻防转换的枢纽。你的金球奖证明了防守型中场也能获得最高荣誉。"}, {"name": "巴尔韦德", "country": "乌拉圭", "pos": "中场", "flag": "🇺🇾", "wikiName": "Federico_Valverde", "tags": ["B2B", "铁人", "远射", "覆盖", "皇马全能"], "tech": 82, "speed": 85, "power": 88, "lead": 80, "crea": 78, "dribble": 78, "shooting": 80, "defense": 75, "vision": 80, "stamina": 95, "aerial": 75, "mentality": 85, "desc": "你是全能B2B中场，拥有出色的体能和全面的技术。你在攻防两端都全力以赴，是球队最可靠的铁人。你的远射是球队的秘密武器。"}, {"name": "佩德里", "country": "西班牙", "pos": "中场", "flag": "🇪🇸", "wikiName": "Pedri", "tags": ["哈维接班人", "控球", "视野", "年轻天才", "巴萨核心"], "tech": 90, "speed": 72, "power": 65, "lead": 70, "crea": 88, "dribble": 85, "shooting": 68, "defense": 60, "vision": 88, "stamina": 85, "aerial": 50, "mentality": 82, "desc": "你是哈维接班人，拥有出色的控球和传球技术。你在中场如同指挥官，用智慧和技术主导比赛。你的成熟和冷静超越了你的年龄。"}, {"name": "赖斯", "country": "英格兰", "pos": "中场", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "wikiName": "Declan_Rice", "tags": ["屏障", "稳健", "拦截", "覆盖", "英格兰铁腰"], "tech": 80, "speed": 75, "power": 85, "lead": 82, "crea": 75, "dribble": 68, "shooting": 65, "defense": 88, "vision": 82, "stamina": 92, "aerial": 85, "mentality": 85, "desc": "你是中场的屏障，拥有出色的拦截和覆盖能力。你是防线前最可靠的盾牌，也是球队由守转攻的第一发起点。你的稳健是球队胜利的基石。"}, {"name": "厄德高", "country": "挪威", "pos": "中场", "flag": "🇳🇴", "wikiName": "Martin_Ødegaard", "tags": ["组织者", "灵巧", "左脚", "阿森纳队长", "挪威天才"], "tech": 88, "speed": 78, "power": 65, "lead": 80, "crea": 90, "dribble": 82, "shooting": 75, "defense": 55, "vision": 90, "stamina": 85, "aerial": 55, "mentality": 80, "desc": "你是进攻组织者，拥有出色的视野和传球技术。你总能发现队友的跑位，送出致命一传。你的挪威血统让你成为哈兰德的最佳搭档。"}, {"name": "琼阿梅尼", "country": "法国", "pos": "中场", "flag": "🇫🇷", "wikiName": "Aurélien_Tchouaméni", "tags": ["后腰", "覆盖", "拦截", "皇马新援", "法国铁闸"], "tech": 82, "speed": 78, "power": 85, "lead": 75, "crea": 72, "dribble": 70, "shooting": 65, "defense": 85, "vision": 80, "stamina": 90, "aerial": 80, "mentality": 82, "desc": "你是法国后腰，拥有出色的覆盖和拦截能力。你的大范围跑动让对手难以通过中场。你的远射是打破僵局的利器。"}, {"name": "麦卡利斯特", "country": "阿根廷", "pos": "中场", "flag": "🇦🇷", "wikiName": "Alexis_Mac_Allister", "tags": ["工兵", "后插上", "世界杯功臣", "利物浦新援", "阿根廷斗士"], "tech": 85, "speed": 78, "power": 75, "lead": 70, "crea": 82, "dribble": 78, "shooting": 72, "defense": 70, "vision": 85, "stamina": 88, "aerial": 65, "mentality": 80, "desc": "你是阿根廷工兵，拥有出色的跑动和插上能力。你在世界杯上证明了自己的价值，是球队夺冠的隐形功臣。你的后插上射门是球队的秘密武器。"}, {"name": "恩佐", "country": "阿根廷", "pos": "中场", "flag": "🇦🇷", "wikiName": "Enzo_Fernández_(footballer,_born_2001)", "tags": ["长传", "后腰", "世界杯最佳新秀", "切尔西新核", "阿根廷大脑"], "tech": 85, "speed": 75, "power": 72, "lead": 70, "crea": 80, "dribble": 78, "shooting": 70, "defense": 68, "vision": 85, "stamina": 88, "aerial": 65, "mentality": 78, "desc": "你是阿根廷新星，拥有出色的长传和控球能力。你的世界杯最佳年轻球员奖项是对你天赋的认可。你的冷静和视野让你成为球队的大脑。"}, {"name": "维尔茨", "country": "德国", "pos": "中场", "flag": "🇩🇪", "wikiName": "Florian_Wirtz", "tags": ["天才", "前腰", "盘带", "勒沃库森核心", "德国未来"], "tech": 90, "speed": 82, "power": 65, "lead": 65, "crea": 88, "dribble": 88, "shooting": 78, "defense": 45, "vision": 88, "stamina": 82, "aerial": 50, "mentality": 78, "desc": "你是德国天才，拥有出色的盘带和创造力。你在勒沃库森的不败赛季中扮演了核心角色。你的受伤复出证明了你的坚韧和决心。"}, {"name": "巴雷拉", "country": "意大利", "pos": "中场", "flag": "🇮🇹", "wikiName": "Nicolò_Barella", "tags": ["斗士", "发动机", "远射", "国米核心", "意大利心脏"], "tech": 86, "speed": 80, "power": 80, "lead": 78, "crea": 82, "dribble": 80, "shooting": 75, "defense": 78, "vision": 85, "stamina": 92, "aerial": 70, "mentality": 88, "desc": "你是意大利斗士，拥有出色的体能和战斗精神。你在球场上不知疲倦地奔跑，是球队的心脏。你的远射和插上让对手防不胜防。"}, {"name": "B费", "country": "葡萄牙", "pos": "中场", "flag": "🇵🇹", "wikiName": "Bruno_Fernandes", "tags": ["传球", "远射", "数据狂人", "曼联核心", "葡萄牙发动机"], "tech": 85, "speed": 75, "power": 72, "lead": 82, "crea": 88, "dribble": 76, "shooting": 82, "defense": 55, "vision": 90, "stamina": 88, "aerial": 70, "mentality": 82, "desc": "你是葡萄牙核心，拥有出色的传球和远射能力。你的数据总是令人惊叹，是球队进攻的发动机。你的激情和斗志感染着每一位队友。"}, {"name": "加维", "country": "西班牙", "pos": "中场", "flag": "🇪🇸", "wikiName": "Gavi_(footballer)", "tags": ["斗牛犬", "活力", "拼抢", "巴萨新星", "西班牙未来"], "tech": 86, "speed": 82, "power": 78, "lead": 72, "crea": 85, "dribble": 85, "shooting": 72, "defense": 75, "vision": 82, "stamina": 95, "aerial": 60, "mentality": 88, "desc": "你是西班牙斗牛犬，拥有出色的活力和拼抢能力。你在球场上如同永动机，用不懈的奔跑覆盖每一寸草地。你的受伤让人惋惜，但你的回归必将更加强大。"}, {"name": "卡马文加", "country": "法国", "pos": "中场", "flag": "🇫🇷", "wikiName": "Eduardo_Camavinga", "tags": ["多面手", "稳健", "年轻天才", "皇马新援", "法国未来"], "tech": 85, "speed": 80, "power": 78, "lead": 70, "crea": 78, "dribble": 82, "shooting": 68, "defense": 80, "vision": 80, "stamina": 90, "aerial": 70, "mentality": 80, "desc": "你是法国多面手，拥有出色的技术和防守意识。你能胜任后腰和左后卫多个位置，是教练的战术万金油。你的冷静和成熟超越了你的年龄。"}, {"name": "B席", "country": "葡萄牙", "pos": "中场", "flag": "🇵🇹", "wikiName": "Bernardo_Silva", "tags": ["魔术师", "跑动", "盘带", "曼城核心", "葡萄牙精灵"], "tech": 90, "speed": 78, "power": 68, "lead": 75, "crea": 88, "dribble": 88, "shooting": 75, "defense": 70, "vision": 88, "stamina": 95, "aerial": 55, "mentality": 85, "desc": "你是葡萄牙魔术师，拥有出色的盘带和跑动能力。你在狭小空间内的处理球是艺术，你的无球跑动是战术教科书。你是瓜迪奥拉最信任的球员之一。"}, {"name": "麦迪逊", "country": "英格兰", "pos": "中场", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "wikiName": "James_Maddison", "tags": ["创造力", "定位球", "左脚", "热刺核心", "英格兰魔术师"], "tech": 88, "speed": 75, "power": 68, "lead": 72, "crea": 90, "dribble": 82, "shooting": 80, "defense": 50, "vision": 88, "stamina": 82, "aerial": 55, "mentality": 80, "desc": "你是英格兰创造者，拥有出色的定位球和传球技术。你的左脚技术让你成为球队进攻的发起点。你的转会热刺让你成为球队的核心人物。"}, {"name": "克罗斯", "country": "德国", "pos": "中场", "flag": "🇩🇪", "wikiName": "Toni_Kroos", "tags": ["大师", "长传", "退役传奇", "皇马功勋", "德国大脑"], "tech": 95, "speed": 60, "power": 65, "lead": 85, "crea": 90, "dribble": 80, "shooting": 75, "defense": 60, "vision": 95, "stamina": 80, "aerial": 55, "mentality": 92, "desc": "你是中场大师，拥有超凡的长传和控球技术。你的退役让足球世界失去了一位艺术家。你的传球精准度是历史级别的，你的冷静是球队的定心丸。"}, {"name": "德容", "country": "荷兰", "pos": "中场", "flag": "🇳🇱", "wikiName": "Frenkie_de_Jong", "tags": ["推进", "控球", "巴萨核心", "荷兰天才", "带球大师"], "tech": 88, "speed": 75, "power": 70, "lead": 75, "crea": 85, "dribble": 85, "shooting": 65, "defense": 65, "vision": 88, "stamina": 85, "aerial": 60, "mentality": 80, "desc": "你是荷兰推进器，拥有出色的带球推进和传球能力。你从后场带球向前的能力是球队进攻的发起点。你的巴萨生涯让你成为世界级中场的代表。"}, {"name": "范戴克", "country": "荷兰", "pos": "后卫", "flag": "🇳🇱", "wikiName": "Virgil_van_Dijk", "tags": ["定海神针", "统帅", "领导力", "重伤复出", "世界第一中卫"], "tech": 82, "speed": 75, "power": 95, "lead": 95, "crea": 70, "dribble": 60, "shooting": 55, "defense": 98, "vision": 80, "stamina": 85, "aerial": 98, "mentality": 92, "desc": "你是防线的统帅，拥有出色的领导力和防守意识。你指挥着整条防线，让对手的进攻无功而返。你的重伤复出是足球史上最励志的故事之一。"}, {"name": "阿诺德", "country": "英格兰", "pos": "后卫", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "wikiName": "Trent_Alexander-Arnold", "tags": ["传中专家", "创造力", "定位球", "带刀后卫", "利物浦太子"], "tech": 88, "speed": 80, "power": 75, "lead": 78, "crea": 85, "dribble": 78, "shooting": 70, "defense": 78, "vision": 92, "stamina": 85, "aerial": 65, "mentality": 82, "desc": "你是带刀后卫，拥有出色的传中和技术能力。你的助攻数据让许多前锋都自愧不如。你的定位球和传球是利物浦进攻的重要武器。"}, {"name": "马尔基尼奥斯", "country": "巴西", "pos": "后卫", "flag": "🇧🇷", "wikiName": "Marquinhos", "tags": ["稳健", "领袖", "巴黎队长", "巴西核心", "多面手"], "tech": 80, "speed": 72, "power": 85, "lead": 88, "crea": 75, "dribble": 65, "shooting": 60, "defense": 90, "vision": 78, "stamina": 85, "aerial": 90, "mentality": 85, "desc": "你是巴西领袖，拥有出色的防守技术和领导能力。你在大巴黎和巴西国家队都是防线的核心。你的稳健和冷静是球队的定海神针。"}, {"name": "格瓦迪奥尔", "country": "克罗地亚", "pos": "后卫", "flag": "🇭🇷", "wikiName": "Joško_Gvardiol", "tags": ["现代中卫", "带刀", "左脚", "曼城新援", "世界杯新星"], "tech": 78, "speed": 80, "power": 88, "lead": 75, "crea": 78, "dribble": 72, "shooting": 65, "defense": 88, "vision": 75, "stamina": 88, "aerial": 88, "mentality": 82, "desc": "你是现代中卫，拥有出色的带球和防守能力。你的世界杯表现让你成为最抢手的中后卫之一。你的左脚技术和推进能力让你成为带刀后卫。"}, {"name": "特奥", "country": "法国", "pos": "后卫", "flag": "🇫🇷", "wikiName": "Theo_Hernández", "tags": ["飞翼", "突击", "速度", "米兰核心", "法国飞翼"], "tech": 82, "speed": 90, "power": 80, "lead": 75, "crea": 82, "dribble": 80, "shooting": 70, "defense": 80, "vision": 80, "stamina": 90, "aerial": 75, "mentality": 80, "desc": "你是法国飞翼，拥有出色的速度和突击能力。你的边路推进是球队进攻的重要发起点。你的进球和助攻数据让你成为世界上最贵的边后卫之一。"}, {"name": "鲁本·迪亚斯", "country": "葡萄牙", "pos": "后卫", "flag": "🇵🇹", "wikiName": "Rúben_Dias", "tags": ["稳健", "上抢", "曼城核心", "葡萄牙铁卫", "防线领袖"], "tech": 78, "speed": 75, "power": 90, "lead": 85, "crea": 70, "dribble": 60, "shooting": 55, "defense": 95, "vision": 75, "stamina": 85, "aerial": 92, "mentality": 88, "desc": "你是葡萄牙铁卫，拥有出色的上抢和防守能力。你的稳健和侵略性让对手前锋难以发挥。你是曼城防线的核心，也是葡萄牙后防的定海神针。"}, {"name": "萨利巴", "country": "法国", "pos": "后卫", "flag": "🇫🇷", "wikiName": "William_Saliba", "tags": ["优雅", "速度", "阿森纳核心", "法国新星", "现代中卫"], "tech": 80, "speed": 78, "power": 88, "lead": 78, "crea": 72, "dribble": 65, "shooting": 60, "defense": 92, "vision": 78, "stamina": 88, "aerial": 90, "mentality": 85, "desc": "你是法国优雅中卫，拥有出色的速度和防守意识。你的阿森纳生涯让你成为英超最佳后卫之一。你的冷静和出球能力让你成为现代中卫的典范。"}, {"name": "阿方索·戴维斯", "country": "加拿大", "pos": "后卫", "flag": "🇨🇦", "wikiName": "Alphonso_Davies", "tags": ["飞翼", "速度", "爆发力", "拜仁快马", "加拿大之光"], "tech": 80, "speed": 95, "power": 78, "lead": 70, "crea": 78, "dribble": 85, "shooting": 65, "defense": 82, "vision": 78, "stamina": 92, "aerial": 70, "mentality": 82, "desc": "你是加拿大飞翼，拥有惊人的速度和爆发力。你的边路突击是球队进攻的利器。你从难民到世界杯球星的历程是足球史上最动人的故事之一。"}, {"name": "罗伯逊", "country": "苏格兰", "pos": "后卫", "flag": "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "wikiName": "Andrew_Robertson", "tags": ["铁人", "传中", "利物浦左路", "苏格兰队长", "励志典范"], "tech": 82, "speed": 82, "power": 78, "lead": 80, "crea": 80, "dribble": 78, "shooting": 65, "defense": 85, "vision": 85, "stamina": 92, "aerial": 75, "mentality": 88, "desc": "你是苏格兰铁人，拥有出色的体能和传中能力。你从业余球员到利物浦主力的励志故事激励着每一个人。你的左路走廊是利物浦进攻的重要通道。"}, {"name": "坎塞洛", "country": "葡萄牙", "pos": "后卫", "flag": "🇵🇹", "wikiName": "João_Cancelo", "tags": ["全能", "技术", "多面手", "曼城/巴萨", "边路艺术家"], "tech": 88, "speed": 82, "power": 78, "lead": 75, "crea": 85, "dribble": 85, "shooting": 72, "defense": 82, "vision": 88, "stamina": 88, "aerial": 70, "mentality": 80, "desc": "你是葡萄牙全能后卫，拥有出色的技术和多位置适应能力。你能胜任左右边后卫和边后腰多个角色。你的盘带和传球让你成为边路的艺术家。"}, {"name": "德里赫特", "country": "荷兰", "pos": "后卫", "flag": "🇳🇱", "wikiName": "Matthijs_de_Ligt", "tags": ["年轻领袖", "上抢", "尤文/拜仁", "荷兰天才", "未来世一卫"], "tech": 78, "speed": 75, "power": 88, "lead": 82, "crea": 70, "dribble": 65, "shooting": 60, "defense": 90, "vision": 75, "stamina": 85, "aerial": 88, "mentality": 85, "desc": "你是荷兰年轻领袖，拥有出色的上抢和防守能力。你的阿贾克斯欧冠奇迹让你年少成名。你的领导力和防守意识让你成为未来世界第一中卫的候选人。"}, {"name": "于帕梅卡诺", "country": "法国", "pos": "后卫", "flag": "🇫🇷", "wikiName": "Dayot_Upamecano", "tags": ["力量", "速度", "拜仁铁卫", "法国中卫", "对抗之王"], "tech": 75, "speed": 80, "power": 92, "lead": 78, "crea": 68, "dribble": 65, "shooting": 55, "defense": 88, "vision": 72, "stamina": 88, "aerial": 85, "mentality": 82, "desc": "你是法国力量型中卫，拥有出色的身体和速度。你的对抗能力让对手前锋难以逾越。你的拜仁生涯让你成为欧洲最顶尖的中后卫之一。"}, {"name": "巴斯托尼", "country": "意大利", "pos": "后卫", "flag": "🇮🇹", "wikiName": "Alessandro_Bastoni", "tags": ["优雅", "长传", "左脚", "国米核心", "意大利未来"], "tech": 85, "speed": 75, "power": 85, "lead": 80, "crea": 78, "dribble": 72, "shooting": 60, "defense": 88, "vision": 85, "stamina": 88, "aerial": 90, "mentality": 85, "desc": "你是意大利优雅中卫，拥有出色的长传和防守技术。你的左脚长传是球队发动进攻的重要方式。你的国米生涯让你成为意甲最佳后卫之一。"}, {"name": "孔德", "country": "法国", "pos": "后卫", "flag": "🇫🇷", "wikiName": "Jules_Koundé", "tags": ["多面手", "速度", "巴萨新援", "法国新星", "灵活中卫"], "tech": 82, "speed": 82, "power": 80, "lead": 75, "crea": 75, "dribble": 72, "shooting": 60, "defense": 86, "vision": 78, "stamina": 88, "aerial": 78, "mentality": 82, "desc": "你是法国多面手，拥有出色的速度和适应能力。你能胜任中后卫和右后卫多个位置。你的巴萨生涯让你成为球队后防的重要一环。"}, {"name": "廷贝尔", "country": "荷兰", "pos": "后卫", "flag": "🇳🇱", "wikiName": "Jurriën_Timber", "tags": ["稳健", "出球", "阿森纳新援", "荷兰新星", "多面后卫"], "tech": 85, "speed": 82, "power": 78, "lead": 75, "crea": 78, "dribble": 78, "shooting": 65, "defense": 85, "vision": 82, "stamina": 88, "aerial": 75, "mentality": 82, "desc": "你是荷兰稳健后卫，拥有出色的出球和防守能力。你的阿森纳生涯让你成为英超最受关注的年轻后卫之一。你的多位置适应能力是教练的宝贵财富。"}, {"name": "阿拉巴", "country": "奥地利", "pos": "后卫", "flag": "🇦🇹", "wikiName": "David_Alaba", "tags": ["全能", "经验", "皇马冠军", "奥地利队长", "左路大师"], "tech": 85, "speed": 78, "power": 80, "lead": 85, "crea": 80, "dribble": 78, "shooting": 70, "defense": 85, "vision": 85, "stamina": 85, "aerial": 80, "mentality": 88, "desc": "你是奥地利全能后卫，拥有丰富的经验和出色的技术。你能胜任中后卫和左后卫多个位置。你的皇马生涯让你成为冠军后卫的代表。"}, {"name": "库库雷利亚", "country": "西班牙", "pos": "后卫", "flag": "🇪🇸", "wikiName": "Marc_Cucurella", "tags": ["活力", "边路", "切尔西左路", "西班牙飞翼", "不知疲倦"], "tech": 82, "speed": 82, "power": 75, "lead": 72, "crea": 78, "dribble": 80, "shooting": 60, "defense": 82, "vision": 80, "stamina": 90, "aerial": 70, "mentality": 80, "desc": "你是西班牙活力边卫，拥有出色的体能和边路能力。你的切尔西生涯让你成为英超最活跃的边后卫之一。你的左路突击是球队进攻的重要发起点。"}, {"name": "科纳特", "country": "法国", "pos": "后卫", "flag": "🇫🇷", "wikiName": "Ibrahima_Konaté", "tags": ["力量", "对抗", "利物浦铁卫", "法国力量", "空中霸主"], "tech": 75, "speed": 78, "power": 92, "lead": 75, "crea": 68, "dribble": 60, "shooting": 55, "defense": 90, "vision": 72, "stamina": 85, "aerial": 90, "mentality": 82, "desc": "你是法国力量型中卫，拥有出色的对抗和空中能力。你的利物浦生涯让你成为英超最可靠的中后卫之一。你的身体条件是中后卫的典范。"}, {"name": "加布里埃尔", "country": "巴西", "pos": "后卫", "flag": "🇧🇷", "wikiName": "Gabriel_dos_Santos_Magalhães", "tags": ["稳健", "左脚", "阿森纳铁卫", "巴西力量", "萨利巴搭档"], "tech": 78, "speed": 75, "power": 88, "lead": 78, "crea": 70, "dribble": 65, "shooting": 60, "defense": 88, "vision": 75, "stamina": 88, "aerial": 92, "mentality": 82, "desc": "你是巴西稳健中卫，拥有出色的左脚技术和防守意识。你的阿森纳生涯让你成为英超最稳定的中后卫之一。你的搭档萨利巴让你们成为最佳中卫组合。"}, {"name": "斯通斯", "country": "英格兰", "pos": "后卫", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "wikiName": "John_Stones", "tags": ["出球", "多面手", "瓜帅爱将", "英格兰核心", "后腰转型"], "tech": 85, "speed": 75, "power": 80, "lead": 80, "crea": 82, "dribble": 78, "shooting": 65, "defense": 85, "vision": 88, "stamina": 85, "aerial": 80, "mentality": 85, "desc": "你是英格兰出球中卫，拥有出色的传球和多位置适应能力。你的后腰转型让你成为瓜迪奥拉战术体系的关键。你的英格兰生涯让你成为国家队的核心。"}],
+  questions: [{"text": "比赛最后时刻，你更倾向于？", "options": [{"label": "A", "text": "用精妙传球撕开防线", "scores": {"crea": 8, "vision": 8, "tech": 5}}, {"label": "B", "text": "用速度强行突破", "scores": {"speed": 10, "dribble": 5}}, {"label": "C", "text": "冷静指挥队友跑位", "scores": {"lead": 10, "vision": 5}}, {"label": "D", "text": "用身体扛住对手护球", "scores": {"power": 10, "stamina": 5}}, {"label": "E", "text": "尝试远射破门", "scores": {"shooting": 10, "mentality": 5}}, {"label": "F", "text": "回撤防守保护胜利", "scores": {"defense": 10, "mentality": 5}}]}, {"text": "你的训练重点通常是？", "options": [{"label": "A", "text": "射门和终结", "scores": {"shooting": 10, "tech": 5}}, {"label": "B", "text": "体能和冲刺", "scores": {"speed": 8, "stamina": 8}}, {"label": "C", "text": "对抗和力量", "scores": {"power": 10, "aerial": 5}}, {"label": "D", "text": "战术理解和沟通", "scores": {"vision": 8, "lead": 7}}, {"label": "E", "text": "盘带和过人", "scores": {"dribble": 10, "tech": 5}}, {"label": "F", "text": "防守站位", "scores": {"defense": 10, "vision": 5}}]}, {"text": "队友失误后，你会？", "options": [{"label": "A", "text": "立刻鼓励并给出建议", "scores": {"lead": 10, "mentality": 5}}, {"label": "B", "text": "用行动带动节奏", "scores": {"speed": 5, "stamina": 5}}, {"label": "C", "text": "更专注自己的任务", "scores": {"tech": 5, "mentality": 5}}, {"label": "D", "text": "主动承担更多责任", "scores": {"lead": 5, "defense": 5}}, {"label": "E", "text": "尝试更冒险的传球", "scores": {"crea": 8, "vision": 5}}]}, {"text": "你最喜欢的进球方式是？", "options": [{"label": "A", "text": "任意球直接破门", "scores": {"tech": 8, "shooting": 8, "mentality": 5}}, {"label": "B", "text": "长途奔袭单刀", "scores": {"speed": 8, "dribble": 7, "stamina": 5}}, {"label": "C", "text": "头球抢点", "scores": {"aerial": 10, "power": 5, "shooting": 5}}, {"label": "D", "text": "团队配合后推射", "scores": {"vision": 5, "crea": 5, "tech": 5}}, {"label": "E", "text": "倒钩或高难度射门", "scores": {"tech": 5, "shooting": 5, "aerial": 5}}]}, {"text": "面对多人包夹，你会？", "options": [{"label": "A", "text": "尝试过人突破", "scores": {"dribble": 10, "tech": 5, "speed": 5}}, {"label": "B", "text": "快速出球转移", "scores": {"vision": 8, "tech": 5, "speed": 5}}, {"label": "C", "text": "护球等待支援", "scores": {"power": 8, "tech": 5, "stamina": 5}}, {"label": "D", "text": "大声指挥队友跑位", "scores": {"lead": 10, "vision": 5}}, {"label": "E", "text": "直接射门尝试", "scores": {"shooting": 8, "mentality": 5}}]}, {"text": "你的理想场上角色是？", "options": [{"label": "A", "text": "进攻核心组织者", "scores": {"crea": 8, "vision": 10, "tech": 5}}, {"label": "B", "text": "反击箭头", "scores": {"speed": 10, "shooting": 5, "stamina": 5}}, {"label": "C", "text": "防线定海神针", "scores": {"defense": 10, "aerial": 8, "power": 5}}, {"label": "D", "text": "全能B2B", "scores": {"stamina": 8, "speed": 5, "defense": 5, "shooting": 5}}, {"label": "E", "text": "边路爆点", "scores": {"speed": 8, "dribble": 8, "stamina": 5}}]}, {"text": "输球后你的第一反应是？", "options": [{"label": "A", "text": "分析技术细节", "scores": {"tech": 5, "vision": 5, "mentality": 5}}, {"label": "B", "text": "加练体能", "scores": {"stamina": 10, "speed": 5}}, {"label": "C", "text": "召集队友总结", "scores": {"lead": 10, "mentality": 5}}, {"label": "D", "text": "独自加练力量", "scores": {"power": 10, "stamina": 5}}, {"label": "E", "text": "研究比赛录像", "scores": {"vision": 8, "defense": 5, "mentality": 5}}]}, {"text": "你更享受比赛的哪个瞬间？", "options": [{"label": "A", "text": "送出助攻", "scores": {"crea": 8, "vision": 8, "tech": 5}}, {"label": "B", "text": "冲刺追球", "scores": {"speed": 8, "stamina": 5}}, {"label": "C", "text": "成功铲断", "scores": {"defense": 8, "power": 5, "mentality": 5}}, {"label": "D", "text": "关键扑救", "scores": {"mentality": 8, "defense": 5, "lead": 3}}, {"label": "E", "text": "头球破门", "scores": {"aerial": 10, "shooting": 5, "power": 5}}]}, {"text": "你的踢球风格最接近？", "options": [{"label": "A", "text": "艺术家型，追求美感", "scores": {"tech": 8, "crea": 8, "dribble": 5}}, {"label": "B", "text": "猎豹型，追求速度", "scores": {"speed": 10, "stamina": 5}}, {"label": "C", "text": "坦克型，追求对抗", "scores": {"power": 10, "aerial": 5, "defense": 5}}, {"label": "D", "text": "将军型，追求掌控", "scores": {"lead": 8, "vision": 8, "defense": 5}}, {"label": "E", "text": "杀手型，追求效率", "scores": {"shooting": 10, "mentality": 8, "speed": 5}}]}, {"text": "如果只能提升一项能力，你会选？", "options": [{"label": "A", "text": "脚下技术", "scores": {"tech": 15}}, {"label": "B", "text": "爆发速度", "scores": {"speed": 15}}, {"label": "C", "text": "身体对抗", "scores": {"power": 15}}, {"label": "D", "text": "场上指挥", "scores": {"lead": 15}}, {"label": "E", "text": "盘带过人", "scores": {"dribble": 15}}, {"label": "F", "text": "射门精度", "scores": {"shooting": 15}}]}, {"text": "你如何看待数据和个人荣誉？", "options": [{"label": "A", "text": "数据是实力的证明", "scores": {"shooting": 5, "tech": 5, "mentality": 5}}, {"label": "B", "text": "冠军比数据重要", "scores": {"lead": 8, "defense": 5, "mentality": 5}}, {"label": "C", "text": "享受过程而非结果", "scores": {"crea": 8, "dribble": 5, "tech": 5}}, {"label": "D", "text": "团队成功才是个人成功", "scores": {"vision": 8, "lead": 5, "defense": 5}}]}, {"text": "比赛中你最常出现在？", "options": [{"label": "A", "text": "前场危险区域", "scores": {"shooting": 5, "crea": 5, "dribble": 5}}, {"label": "B", "text": "边路走廊", "scores": {"speed": 8, "stamina": 5, "dribble": 5}}, {"label": "C", "text": "中路禁区", "scores": {"aerial": 8, "shooting": 5, "power": 5}}, {"label": "D", "text": "后场组织", "scores": {"vision": 5, "defense": 5, "lead": 5}}, {"label": "E", "text": "全场无处不在", "scores": {"stamina": 10, "speed": 5, "defense": 5}}]}, {"text": "你的弱点最可能是？", "options": [{"label": "A", "text": "体能不足", "scores": {"stamina": -5, "tech": 5, "crea": 5}}, {"label": "B", "text": "技术粗糙", "scores": {"tech": -5, "power": 5, "aerial": 5}}, {"label": "C", "text": "速度偏慢", "scores": {"speed": -5, "vision": 5, "lead": 5}}, {"label": "D", "text": "性格内向", "scores": {"lead": -5, "tech": 5, "crea": 5}}, {"label": "E", "text": "射门不稳", "scores": {"shooting": -5, "vision": 5, "defense": 5}}]}, {"text": "你欣赏的足球哲学是？", "options": [{"label": "A", "text": "传控足球", "scores": {"tech": 8, "vision": 8, "crea": 5}}, {"label": "B", "text": "高位逼抢", "scores": {"speed": 8, "stamina": 8, "defense": 5}}, {"label": "C", "text": "防守反击", "scores": {"speed": 5, "defense": 8, "shooting": 5}}, {"label": "D", "text": "全攻全守", "scores": {"stamina": 8, "speed": 5, "defense": 5, "shooting": 5}}, {"label": "E", "text": "长传冲吊", "scores": {"aerial": 8, "power": 5, "vision": 5}}]}, {"text": "你的饮食习惯更偏向？", "options": [{"label": "A", "text": "均衡营养，注重恢复", "scores": {"stamina": 5, "tech": 5, "mentality": 5}}, {"label": "B", "text": "高蛋白增肌", "scores": {"power": 8, "aerial": 5}}, {"label": "C", "text": "碳水补充能量", "scores": {"speed": 8, "stamina": 5}}, {"label": "D", "text": "不挑食，随意吃", "scores": {"crea": 5, "mentality": 5}}]}, {"text": "你的赛前仪式是？", "options": [{"label": "A", "text": "听轻音乐放松", "scores": {"tech": 5, "crea": 5, "mentality": 5}}, {"label": "B", "text": "高强度热身", "scores": {"speed": 5, "stamina": 5, "power": 5}}, {"label": "C", "text": "和队友互相鼓励", "scores": {"lead": 10, "mentality": 5}}, {"label": "D", "text": "独自冥想专注", "scores": {"mentality": 10, "tech": 5}}, {"label": "E", "text": "检查装备和战术板", "scores": {"vision": 5, "defense": 5, "lead": 5}}]}, {"text": "如果转行，你最可能做？", "options": [{"label": "A", "text": "艺术家/设计师", "scores": {"crea": 10, "tech": 5, "dribble": 5}}, {"label": "B", "text": "短跑运动员", "scores": {"speed": 10, "stamina": 5}}, {"label": "C", "text": "军人/警察", "scores": {"power": 8, "defense": 8, "lead": 5}}, {"label": "D", "text": "企业家/管理者", "scores": {"lead": 10, "vision": 8}}, {"label": "E", "text": "心理学家", "scores": {"mentality": 10, "vision": 5}}]}, {"text": "用一句话形容自己？", "options": [{"label": "A", "text": "用脑子踢球", "scores": {"vision": 10, "tech": 5, "crea": 5}}, {"label": "B", "text": "用速度生吃", "scores": {"speed": 10, "power": 5}}, {"label": "C", "text": "用身体碾压", "scores": {"power": 10, "aerial": 5, "defense": 5}}, {"label": "D", "text": "用气场统治", "scores": {"lead": 10, "mentality": 5}}, {"label": "E", "text": "用脚下魔术", "scores": {"dribble": 10, "tech": 5, "crea": 5}}]}, {"text": "面对强敌，你更倾向于？", "options": [{"label": "A", "text": "控球消耗对方", "scores": {"tech": 8, "stamina": 5, "mentality": 5}}, {"label": "B", "text": "快速转换进攻", "scores": {"speed": 8, "vision": 5, "shooting": 5}}, {"label": "C", "text": "稳固防守反击", "scores": {"defense": 8, "mentality": 5, "lead": 5}}, {"label": "D", "text": "高位压迫抢开局", "scores": {"stamina": 8, "speed": 5, "defense": 5}}, {"label": "E", "text": "个人英雄主义", "scores": {"shooting": 5, "dribble": 5, "mentality": 5}}]}, {"text": "你最喜欢的训练项目是？", "options": [{"label": "A", "text": "任意球和射门", "scores": {"shooting": 10, "tech": 5, "mentality": 5}}, {"label": "B", "text": "折返跑和冲刺", "scores": {"speed": 8, "stamina": 8}}, {"label": "C", "text": "对抗和争顶", "scores": {"power": 8, "aerial": 8}}, {"label": "D", "text": "战术演练和跑位", "scores": {"vision": 8, "lead": 5, "defense": 5}}, {"label": "E", "text": "小范围配合游戏", "scores": {"tech": 5, "crea": 8, "dribble": 5}}]}],
+
+  tracks: {
+    bilibili: [
+      { name: "Dai Dai", id: "BV1J2VW6KEt6" },
+      { name: "Waka Waka", id: "BV11M411C7Bc" },
+      { name: "Hayya Hayya", id: "BV1sp5Z6CEPW" }
+    ],
+    youtube: [
+      { name: "Dai Dai", id: "lFQdcPTTzSg" },
+      { name: "Waka Waka", id: "pRpeEdMmmQ0" },
+      { name: "Hayya Hayya", id: "tgbNymZ7vqY" }
+    ]
+  },
+
+  start() {
+    this.current = 0;
+    this.scores = { tech:50, speed:50, power:50, lead:50, crea:50, dribble:50, shooting:50, defense:50, vision:50, stamina:50, aerial:50, mentality:50 };
+    this.history = [];
+    document.getElementById('cover').classList.add('hidden');
+    document.getElementById('quiz').classList.remove('hidden');
+    document.getElementById('result').classList.add('hidden');
+    this.renderQuestion();
+
+    if (!this.musicStarted) {
+      this.musicCollapsed = false;
+      const player = document.getElementById('musicPlayer');
+      const toggle = document.getElementById('musicToggle');
+      player.classList.remove('collapsed');
+      toggle.textContent = '▼';
+      this.playTrack(0);
+      this.musicStarted = true;
+    }
+  },
+
+  renderQuestion() {
+    const q = this.questions[this.current];
+    document.getElementById('qNum').textContent = `QUESTION ${String(this.current+1).padStart(2,'0')}`;
+    document.getElementById('qText').textContent = q.text;
+    const opts = document.getElementById('options');
+    opts.innerHTML = '';
+
+    const hist = this.history[this.current];
+
+    q.options.forEach((opt, idx) => {
+      const div = document.createElement('div');
+      div.className = 'option';
+      if (hist && hist.optIndex === idx) {
+        div.classList.add('selected');
+      }
+      div.innerHTML = `<div class="option-letter">${opt.label}</div><div>${opt.text}</div>`;
+      div.onclick = () => this.selectOption(idx);
+      opts.appendChild(div);
+    });
+
+    document.getElementById('btnBack').disabled = this.current === 0;
+
+    this.updateProgress();
+    if (this.current > 0) {
+      this.showLiveTop3();
+    } else {
+      document.getElementById('liveTop3').style.display = 'none';
+    }
+  },
+
+  updateProgress() {
+    const pct = Math.round((this.current / this.questions.length) * 100);
+    document.getElementById('progressText').textContent = `问题 ${this.current+1} / ${this.questions.length}`;
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressFill').style.width = pct + '%';
+  },
+
+  selectOption(idx) {
+    const q = this.questions[this.current];
+    const opt = q.options[idx];
+
+    if (this.history[this.current]) {
+      const old = this.history[this.current];
+      for (const [k, v] of Object.entries(old.changes)) {
+        this.scores[k] -= v;
+      }
+    }
+
+    const changes = {...opt.scores};
+    this.history[this.current] = { optIndex: idx, changes };
+
+    for (const [k, v] of Object.entries(changes)) {
+      this.scores[k] = Math.max(0, Math.min(100, this.scores[k] + v));
+    }
+
+    this.current++;
+    if (this.current >= this.questions.length) {
+      this.showResult();
+    } else {
+      this.renderQuestion();
+    }
+  },
+
+  goBack() {
+    if (this.current <= 0) return;
+    this.current--;
+    const old = this.history[this.current];
+    if (old) {
+      for (const [k, v] of Object.entries(old.changes)) {
+        this.scores[k] -= v;
+      }
+    }
+    this.renderQuestion();
+  },
+
+  calcSimilarity(player) {
+    const dims = ['tech','speed','power','lead','crea','dribble','shooting','defense','vision','stamina','aerial','mentality'];
+    let sum = 0;
+    for (const d of dims) {
+      const diff = this.scores[d] - player[d];
+      sum += diff * diff;
+    }
+    const dist = Math.sqrt(sum / dims.length);
+    const sim = Math.max(0, 100 - dist * 1.1);
+    return sim;
+  },
+
+  getTopMatches(n=3) {
+    return this.players.map(p => ({...p, sim: this.calcSimilarity(p)}))
+      .sort((a,b) => b.sim - a.sim)
+      .slice(0, n);
+  },
+
+  showLiveTop3() {
+    const top3 = this.getTopMatches(3);
+    const box = document.getElementById('liveTop3');
+    const list = document.getElementById('top3List');
+    box.style.display = 'block';
+    list.innerHTML = '';
+    top3.forEach((p, i) => {
+      const sim = Math.round(p.sim);
+      const avatarClass = p.pos === '前锋' ? 'avatar-fwd' : (p.pos === '中场' ? 'avatar-mid' : 'avatar-def');
+      const div = document.createElement('div');
+      div.className = 'top3-item';
+      div.innerHTML = `
+        <div class="top3-rank top3-rank-${i+1}">${i+1}</div>
+        <div class="player-avatar ${avatarClass}">${p.flag}</div>
+        <div class="top3-info">
+          <div class="top3-name">${p.name}</div>
+          <div class="top3-meta">${p.country} · ${p.pos}</div>
+          <div class="top3-tags">${p.tags.slice(0,3).map(t=>`<span class="top3-tag">${t}</span>`).join('')}</div>
+        </div>
+        <div class="top3-sim ${sim>80?'top3-sim-high':''}">${sim}%</div>
+        <svg class="mini-radar" viewBox="0 0 100 100"></svg>
+      `;
+      list.appendChild(div);
+      this.drawMiniRadar(div.querySelector('svg'), p, 38);
+    });
+  },
+
+  drawMiniRadar(svg, player, radius) {
+    const dims = ['tech','speed','power','lead','crea','dribble'];
+    const cx=50, cy=50;
+    const angle = i => (Math.PI*2/6)*i - Math.PI/2;
+    const val = d => ((player[d] || this.scores[d]) / 100);
+    let pts = dims.map((d,i) => {
+      const a = angle(i);
+      const r = radius * val(d);
+      return [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+    });
+    let path = `M ${pts[0][0]} ${pts[0][1]} ` + pts.slice(1).map(p=>`L ${p[0]} ${p[1]}`).join(' ') + ' Z';
+    let grid = '';
+    for (let ring=1; ring<=3; ring++) {
+      const r = radius * ring/3;
+      const rp = dims.map((_,i)=>{ const a=angle(i); return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; });
+      grid += `<polygon points="${rp.map(p=>p.join(',')).join(' ')}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>`;
+    }
+    for (let i=0;i<6;i++) {
+      const a=angle(i);
+      grid += `<line x1="${cx}" y1="${cy}" x2="${cx+radius*Math.cos(a)}" y2="${cy+radius*Math.sin(a)}" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>`;
+    }
+    svg.innerHTML = grid + `
+      <path d="${path}" fill="rgba(0,212,170,0.25)" stroke="#00d4aa" stroke-width="1.5"/>
+      ${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="1.5" fill="#00d4aa"/>`).join('')}
+    `;
+  },
+
+  async showResult() {
+    document.getElementById('quiz').classList.add('hidden');
+    document.getElementById('result').classList.remove('hidden');
+    const top = this.getTopMatches(1)[0];
+    const sim = Math.round(top.sim);
+
+    const avatarDiv = document.getElementById('rAvatar');
+    const fallbackDiv = document.getElementById('rFallback');
+    const avatarClass = top.pos === '前锋' ? 'avatar-fwd' : (top.pos === '中场' ? 'avatar-mid' : 'avatar-def');
+    avatarDiv.className = `player-avatar-lg ${avatarClass}`;
+
+    try {
+      const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${top.wikiName}`;
+      const res = await fetch(wikiUrl);
+      const data = await res.json();
+      if (data.thumbnail && data.thumbnail.source) {
+        const img = document.createElement('img');
+        img.src = data.thumbnail.source;
+        img.onerror = () => {
+          fallbackDiv.textContent = top.flag;
+        };
+        avatarDiv.appendChild(img);
+      } else {
+        fallbackDiv.textContent = top.flag;
+      }
+    } catch(e) {
+      fallbackDiv.textContent = top.flag;
+    }
+
+    const sortedDims = Object.entries(this.scores).sort((a,b) => b[1]-a[1]).slice(0,3);
+    const dimNames = { tech:'技术', speed:'速度', power:'力量', lead:'领导力', crea:'创造力', dribble:'盘带', shooting:'射门', defense:'防守', vision:'视野', stamina:'耐力', aerial:'空中', mentality:'心理' };
+    const dimsHtml = sortedDims.map(([k,v]) => `
+      <div class="result-dim">
+        <span class="dim-name">${dimNames[k]}</span>
+        <span class="dim-val"> ${Math.round(v)}</span>
+      </div>
+    `).join('');
+    document.getElementById('rDims').innerHTML = dimsHtml;
+
+    document.getElementById('rName').textContent = top.name;
+    document.getElementById('rMeta').textContent = `${top.flag} ${top.country} · ${top.pos} · ${top.tags.join(' / ')}`;
+    document.getElementById('rPercent').textContent = sim + '%';
+    document.getElementById('legendPlayer').innerHTML = `<span class="dot dot-player"></span> ${top.name}`;
+    document.getElementById('rReport').innerHTML = this.generateReport(top, sortedDims);
+    this.drawRadar('radarSvg', top, 120);
+    window.scrollTo(0,0);
+  },
+
+  generateReport(player, topDims) {
+    const dimNames = { tech:'技术', speed:'速度', power:'力量', lead:'领导力', crea:'创造力', dribble:'盘带', shooting:'射门', defense:'防守', vision:'视野', stamina:'耐力', aerial:'空中', mentality:'心理' };
+
+    const dim1 = dimNames[topDims[0][0]];
+    const dim2 = dimNames[topDims[1][0]];
+    const dim3 = dimNames[topDims[2][0]];
+    const val1 = Math.round(topDims[0][1]);
+    const val2 = Math.round(topDims[1][1]);
+    const val3 = Math.round(topDims[2][1]);
+
+    let choicePattern = '';
+    const dimCounts = {};
+    this.history.forEach(h => {
+      Object.keys(h.changes).forEach(k => {
+        dimCounts[k] = (dimCounts[k] || 0) + 1;
+      });
+    });
+    const topChoiceDims = Object.entries(dimCounts).sort((a,b) => b[1]-a[1]).slice(0,2);
+    if (topChoiceDims.length > 0) {
+      choicePattern = `在20道问题的选择中，你最常展现的是<strong>${dimNames[topChoiceDims[0][0]]}</strong>倾向（共${topChoiceDims[0][1]}次选择涉及），`;
+      if (topChoiceDims[1]) {
+        choicePattern += `同时<strong>${dimNames[topChoiceDims[1][0]]}</strong>也是你的重要特质（${topChoiceDims[1][1]}次）。`;
+      } else {
+        choicePattern += `这表明${dimNames[topChoiceDims[0][0]]}是你最根深蒂固的足球本能。`;
+      }
+    }
+
+    let diffAnalysis = '';
+    const dims = ['tech','speed','power','lead','crea','dribble','shooting','defense','vision','stamina','aerial','mentality'];
+    const closeDims = [];
+    const farDims = [];
+    dims.forEach(d => {
+      const diff = Math.abs(this.scores[d] - player[d]);
+      if (diff < 10) closeDims.push(dimNames[d]);
+      else if (diff > 25) farDims.push(dimNames[d]);
+    });
+    if (closeDims.length > 0) {
+      diffAnalysis += `<br><br>你与${player.name}在<strong>${closeDims.join('、')}</strong>上高度一致，这是你们风格匹配的核心基础。`;
+    }
+    if (farDims.length > 0) {
+      diffAnalysis += `而在<strong>${farDims.join('、')}</strong>方面，你们存在一定差异——这也意味着如果你能在这些维度上继续提升，你将更接近${player.name}的完整形态。`;
+    }
+
+    let posAnalysis = '';
+    if (player.pos === '前锋') {
+      posAnalysis = `作为前锋，${player.name}的${player.tags.slice(0,3).join('、')}特质与你的进攻本能完美契合。`;
+    } else if (player.pos === '中场') {
+      posAnalysis = `作为中场，${player.name}的${player.tags.slice(0,3).join('、')}特质与你的比赛理解力高度吻合。`;
+    } else {
+      posAnalysis = `作为后卫，${player.name}的${player.tags.slice(0,3).join('、')}特质与你的防守意识如出一辙。`;
+    }
+
+    return `<span class="highlight">根据你的20道问题回答，你的风格与${player.name}最为接近。</span><br><br>
+    ${choicePattern}<br><br>
+    你的能力雷达显示，最突出的三个维度是：<strong>${dim1}（${val1}分）</strong>、<strong>${dim2}（${val2}分）</strong>和<strong>${dim3}（${val3}分）</strong>。这些特质让你在世界足坛找到了最契合的模板——${player.name}。<br><br>
+    ${player.desc}<br><br>
+    ${posAnalysis}${diffAnalysis}<br><br>
+    <span class="highlight">如果${player.name}看到你的比赛风格，他可能会说："这小伙子/姑娘有点东西，和我很像！"</span>`;
+  },
+
+  drawRadar(svgId, player, radius) {
+    const svg = document.getElementById(svgId);
+    const dims = ['tech','speed','power','lead','crea','dribble','shooting','defense','vision','stamina','aerial','mentality'];
+    const labels = ['技术','速度','力量','领导','创造','盘带','射门','防守','视野','耐力','空中','心理'];
+    const cx=200, cy=140;
+    const angle = i => (Math.PI*2/12)*i - Math.PI/2;
+    const val = d => ((player[d] || this.scores[d]) / 100);
+    let userPts = dims.map((d,i) => {
+      const a = angle(i);
+      const r = radius * (this.scores[d]/100);
+      return [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+    });
+    let playerPts = dims.map((d,i) => {
+      const a = angle(i);
+      const r = radius * (player[d]/100);
+      return [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+    });
+    let grid = '';
+    for (let ring=1; ring<=5; ring++) {
+      const r = radius * ring/5;
+      const rp = dims.map((_,i)=>{ const a=angle(i); return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; });
+      grid += `<polygon points="${rp.map(p=>p.join(',')).join(' ')}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>`;
+    }
+    for (let i=0;i<12;i++) {
+      const a=angle(i);
+      const x2=cx+radius*Math.cos(a), y2=cy+radius*Math.sin(a);
+      grid += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>`;
+      const lx = cx + (radius+28)*Math.cos(a);
+      const ly = cy + (radius+28)*Math.sin(a);
+      const anchor = Math.abs(Math.cos(a))<0.3?'middle':(Math.cos(a)>0?'start':'end');
+      grid += `<text x="${lx}" y="${ly+5}" text-anchor="${anchor}" fill="#a0a0b0" font-size="11" font-weight="600">${labels[i]}</text>`;
+    }
+    const up = `M ${userPts[0][0]} ${userPts[0][1]} ` + userPts.slice(1).map(p=>`L ${p[0]} ${p[1]}`).join(' ') + ' Z';
+    const pp = `M ${playerPts[0][0]} ${playerPts[0][1]} ` + playerPts.slice(1).map(p=>`L ${p[0]} ${p[1]}`).join(' ') + ' Z';
+    svg.innerHTML = grid + `
+      <path d="${pp}" fill="rgba(255,77,109,0.15)" stroke="#ff4d6d" stroke-width="2" stroke-dasharray="4,4"/>
+      <path d="${up}" fill="rgba(59,130,246,0.2)" stroke="#3b82f6" stroke-width="2"/>
+      ${userPts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#3b82f6"/>`).join('')}
+      ${playerPts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#ff4d6d"/>`).join('')}
+    `;
+  },
+
+  copyResult() {
+    const top = this.getTopMatches(1)[0];
+    const sim = Math.round(top.sim);
+    const text = `🏆 2026美加墨世界杯球员风格测试
+
+我最像的球员是：${top.flag} ${top.name}（${top.country} · ${top.pos}）
+风格匹配度：${sim}%
+
+测测你最像哪位世界杯球星 👉 [你的页面链接]
+
+#美加墨世界杯 #世界杯 #足球测试`;
+    navigator.clipboard.writeText(text).then(() => {
+      const box = document.getElementById('shareText');
+      box.textContent = text;
+      box.classList.add('show');
+      alert('结果已复制到剪贴板！');
+    }).catch(() => {
+      const box = document.getElementById('shareText');
+      box.textContent = text;
+      box.classList.add('show');
+    });
+  },
+
+  restart() {
+    document.getElementById('result').classList.add('hidden');
+    document.getElementById('shareText').classList.remove('show');
+    const avatarDiv = document.getElementById('rAvatar');
+    avatarDiv.innerHTML = '<div class="fallback" id="rFallback"></div>';
+    this.start();
+  },
+
+  toggleMusic() {
+    this.musicCollapsed = !this.musicCollapsed;
+    const player = document.getElementById('musicPlayer');
+    const toggle = document.getElementById('musicToggle');
+    if (this.musicCollapsed) {
+      player.classList.add('collapsed');
+      toggle.textContent = '▲';
+    } else {
+      player.classList.remove('collapsed');
+      toggle.textContent = '▼';
+    }
+  },
+
+  setSource(src) {
+    this.musicSource = src;
+    document.getElementById('srcBili').classList.toggle('active', src === 'bilibili');
+    document.getElementById('srcYT').classList.toggle('active', src === 'youtube');
+    this.playTrack(this.currentTrack);
+  },
+
+  playTrack(idx) {
+    this.currentTrack = idx;
+    const track = this.tracks[this.musicSource][idx];
+    const iframe = document.getElementById('musicIframe');
+    const wrap = document.getElementById('musicWrap');
+
+    if (this.musicSource === 'bilibili') {
+      iframe.src = `https://player.bilibili.com/player.html?bvid=${track.id}&page=1&high_quality=1&danmaku=0&autoplay=1`;
+    } else {
+      const playlistIds = this.tracks.youtube.map(t => t.id).join(',');
+      iframe.src = `https://www.youtube.com/embed/${track.id}?autoplay=1&loop=1&playlist=${playlistIds}`;
+    }
+
+    wrap.classList.add('active');
+    document.querySelectorAll('.track-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', i === idx);
+    });
+  }
+};
+
+const coverGrid = document.getElementById('coverPlayers');
+app.players.forEach(p => {
+  const div = document.createElement('div');
+  div.className = 'player-chip';
+  const avatarClass = p.pos === '前锋' ? 'avatar-fwd' : (p.pos === '中场' ? 'avatar-mid' : 'avatar-def');
+  div.innerHTML = `<div class="pavatar ${avatarClass}">${p.flag}</div><div class="pname">${p.name}</div><div class="ppos">${p.pos}</div><div class="ptags">${p.tags.slice(0,2).map(t=>`<span class="ptag">${t}</span>`).join('')}</div>`;
+  coverGrid.appendChild(div);
+});
+</script>
+</body>
+</html>
