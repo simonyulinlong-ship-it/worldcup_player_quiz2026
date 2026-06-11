@@ -95,11 +95,16 @@
   }
   .player-avatar-lg img {
     width: 100%; height: 100%; object-fit: cover;
+    position: absolute; inset: 0;
   }
   .player-avatar-lg .fallback {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
     font-size: 3.5rem;
+    z-index: 2;
+  }
+  .player-avatar-lg.has-img .fallback {
+    display: none;
   }
 
   .quiz-page { animation: slideUp 0.5s ease; }
@@ -336,29 +341,29 @@
 
   .music-player {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 12px;
+    right: 12px;
     z-index: 100;
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 14px;
+    padding: 12px 14px;
     backdrop-filter: blur(16px);
-    width: 320px;
+    width: 280px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     transition: transform 0.3s ease;
   }
-  .music-player.collapsed { transform: translateY(calc(100% - 48px)); }
+  .music-player.collapsed { transform: translateY(calc(100% - 44px)); }
   .music-header {
     display:flex; align-items:center; justify-content:space-between;
-    margin-bottom: 10px;
     cursor: pointer;
+    height: 20px;
   }
-  .music-title { font-size: 0.85rem; font-weight: 700; display:flex; align-items:center; gap:6px; }
-  .music-toggle { background:none; border:none; color:var(--text2); cursor:pointer; font-size:1.1rem; }
-  .music-body { display:flex; flex-direction:column; gap:8px; }
+  .music-title { font-size: 0.8rem; font-weight: 700; display:flex; align-items:center; gap:6px; }
+  .music-toggle { background:none; border:none; color:var(--text2); cursor:pointer; font-size:1rem; width:24px; height:24px; display:flex; align-items:center; justify-content:center; }
+  .music-body { display:flex; flex-direction:column; gap:8px; margin-top: 10px; }
   .music-iframe-wrap {
-    width:100%; height:170px; border-radius:10px; overflow:hidden;
+    width:100%; height:150px; border-radius:10px; overflow:hidden;
     background: rgba(0,0,0,0.3);
     display:none;
   }
@@ -388,20 +393,28 @@
   }
   .source-btn.active { background: var(--accent3); color: white; border-color: var(--accent3); }
   .music-note { font-size: 0.7rem; color: var(--text2); margin-top: 4px; }
+  .music-playing-indicator {
+    display: none;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent2);
+    animation: pulse 1.5s infinite;
+    margin-left: 4px;
+  }
 
   @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
   @keyframes slideUp { from { opacity:0; transform: translateY(30px); } to { opacity:1; transform: translateY(0); } }
 
   @media (max-width: 600px) {
-    .container { padding: 16px; }
+    .container { padding: 16px; padding-bottom: 60px; }
     .question-card { padding: 20px; }
     .option { padding: 14px 16px; font-size: 0.95rem; }
     .top3-item { padding: 8px 10px; }
     .mini-radar { width: 48px; height: 48px; }
-    .music-player { width: calc(100% - 32px); left: 16px; right: 16px; bottom: 12px; }
+    .music-player { width: calc(100% - 24px); left: 12px; right: 12px; bottom: 8px; }
+    .music-player.collapsed { transform: translateY(calc(100% - 40px)); }
     .all-players-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
     .result-hero { padding: 24px 16px; }
     .player-avatar-lg { width: 100px; height: 100px; font-size: 2.8rem; }
+    .result-hero .player-avatar-lg { width: 120px; height: 120px; }
   }
 </style>
 </head>
@@ -491,18 +504,18 @@
 
 <div class="music-player collapsed" id="musicPlayer">
   <div class="music-header" onclick="app.toggleMusic()">
-    <div class="music-title">🎵 世界杯主题曲</div>
+    <div class="music-title">🎵 世界杯主题曲 <span class="music-playing-indicator" id="musicIndicator"></span></div>
     <button class="music-toggle" id="musicToggle">▲</button>
   </div>
   <div class="music-body">
     <div class="music-source">
-      <button class="source-btn active" id="srcBili" onclick="app.setSource('bilibili')">B站(国内)</button>
-      <button class="source-btn" id="srcYT" onclick="app.setSource('youtube')">YouTube</button>
+      <button class="source-btn active" id="srcBili" onclick="event.stopPropagation();app.setSource('bilibili')">B站(国内)</button>
+      <button class="source-btn" id="srcYT" onclick="event.stopPropagation();app.setSource('youtube')">YouTube</button>
     </div>
     <div class="music-tracks">
-      <button class="track-btn active" onclick="app.playTrack(0)">《Dai Dai》</button>
-      <button class="track-btn" onclick="app.playTrack(1)">《Waka Waka》</button>
-      <button class="track-btn" onclick="app.playTrack(2)">《Hayya Hayya》</button>
+      <button class="track-btn active" onclick="event.stopPropagation();app.playTrack(0)">《Dai Dai》</button>
+      <button class="track-btn" onclick="event.stopPropagation();app.playTrack(1)">《Waka Waka》</button>
+      <button class="track-btn" onclick="event.stopPropagation();app.playTrack(2)">《Hayya Hayya》</button>
     </div>
     <div class="music-iframe-wrap active" id="musicWrap">
       <iframe id="musicIframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -546,14 +559,11 @@ const app = {
     document.getElementById('result').classList.add('hidden');
     this.renderQuestion();
 
+    // 自动播放音乐，但保持播放器折叠（不遮挡页面）
     if (!this.musicStarted) {
-      this.musicCollapsed = false;
-      const player = document.getElementById('musicPlayer');
-      const toggle = document.getElementById('musicToggle');
-      player.classList.remove('collapsed');
-      toggle.textContent = '▼';
       this.playTrack(0);
       this.musicStarted = true;
+      document.getElementById('musicIndicator').style.display = 'inline-block';
     }
   },
 
@@ -704,35 +714,26 @@ const app = {
     `;
   },
 
-  async showResult() {
+  // 修复：showResult 改为纯同步，图片加载后台异步进行
+  showResult() {
     document.getElementById('quiz').classList.add('hidden');
     document.getElementById('result').classList.remove('hidden');
     const top = this.getTopMatches(1)[0];
     const sim = Math.round(top.sim);
 
+    // 1. 立即显示头像（emoji fallback）
     const avatarDiv = document.getElementById('rAvatar');
     const fallbackDiv = document.getElementById('rFallback');
     const avatarClass = top.pos === '前锋' ? 'avatar-fwd' : (top.pos === '中场' ? 'avatar-mid' : 'avatar-def');
     avatarDiv.className = `player-avatar-lg ${avatarClass}`;
+    avatarDiv.classList.remove('has-img');
+    fallbackDiv.textContent = top.flag;
+    fallbackDiv.style.display = 'flex';
 
-    try {
-      const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${top.wikiName}`;
-      const res = await fetch(wikiUrl);
-      const data = await res.json();
-      if (data.thumbnail && data.thumbnail.source) {
-        const img = document.createElement('img');
-        img.src = data.thumbnail.source;
-        img.onerror = () => {
-          fallbackDiv.textContent = top.flag;
-        };
-        avatarDiv.appendChild(img);
-      } else {
-        fallbackDiv.textContent = top.flag;
-      }
-    } catch(e) {
-      fallbackDiv.textContent = top.flag;
-    }
+    // 2. 后台异步加载 Wikipedia 图片（不阻塞页面渲染）
+    this.loadPlayerImage(top, avatarDiv, fallbackDiv);
 
+    // 3. 立即显示所有基础数据
     const sortedDims = Object.entries(this.scores).sort((a,b) => b[1]-a[1]).slice(0,3);
     const dimNames = { tech:'技术', speed:'速度', power:'力量', lead:'领导力', crea:'创造力', dribble:'盘带', shooting:'射门', defense:'防守', vision:'视野', stamina:'耐力', aerial:'空中', mentality:'心理' };
     const dimsHtml = sortedDims.map(([k,v]) => `
@@ -750,6 +751,46 @@ const app = {
     document.getElementById('rReport').innerHTML = this.generateReport(top, sortedDims);
     this.drawRadar('radarSvg', top, 120);
     window.scrollTo(0,0);
+  },
+
+  // 后台异步加载图片，带超时保护
+  loadPlayerImage(player, avatarDiv, fallbackDiv) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+
+    fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${player.wikiName}`, {
+      signal: controller.signal,
+      mode: 'cors'
+    })
+    .then(res => {
+      clearTimeout(timeoutId);
+      if (!res.ok) throw new Error('Network response was not ok');
+      return res.json();
+    })
+    .then(data => {
+      if (data.thumbnail && data.thumbnail.source) {
+        const img = new Image();
+        img.onload = () => {
+          fallbackDiv.style.display = 'none';
+          avatarDiv.classList.add('has-img');
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          img.style.position = 'absolute';
+          img.style.inset = '0';
+          avatarDiv.appendChild(img);
+        };
+        img.onerror = () => {
+          fallbackDiv.style.display = 'flex';
+        };
+        img.src = data.thumbnail.source;
+      }
+    })
+    .catch(() => {
+      clearTimeout(timeoutId);
+      // 请求失败，保持 fallback 显示
+      fallbackDiv.style.display = 'flex';
+    });
   },
 
   generateReport(player, topDims) {
@@ -882,6 +923,7 @@ const app = {
     document.getElementById('shareText').classList.remove('show');
     const avatarDiv = document.getElementById('rAvatar');
     avatarDiv.innerHTML = '<div class="fallback" id="rFallback"></div>';
+    avatarDiv.classList.remove('has-img');
     this.start();
   },
 
